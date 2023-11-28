@@ -24,6 +24,7 @@ def connectDataBase():
 def get_faculty_info_from_db(db):
     ## Collection
     col = db.pages
+    ## docs = col.find({"name": "Liu, Xin"})
     docs = col.find()
     for data in docs:
         fac_name = data['name']
@@ -60,7 +61,6 @@ def scrap_faculty_individual_page(db, param_name, param_title, param_phone, para
                 print('==========')
                 h2 = content.find('h2')
                 if h2:
-                    print('~~~~~')
                     print(h2.text)
                     if h2.text.find('About') >= 0:
                         param_category = 'About'
@@ -76,7 +76,14 @@ def scrap_faculty_individual_page(db, param_name, param_title, param_phone, para
                 param_content = []
                 contents = content.find_all('div', {"class": "section-menu"})
                 for cont in contents:
-                    if cont.find('p'):
+                    # print(cont)
+                    if cont.find('ol'):
+                        print('~~~~~~~~~~~~~~~~~~~~')
+                        for ol in content.find_all('ol'):
+                            print(ol.find('li').text)
+                            param_content.append(ol.find('li').text)
+
+                    elif cont.find('p'):
                         for p in content.find_all('p'):
                             print(p.text)
                             if len(p.text.strip()) > 0:
@@ -86,24 +93,19 @@ def scrap_faculty_individual_page(db, param_name, param_title, param_phone, para
                         ul = content.find('ul')
                         if ul:
                             lis = ul.find_all('li')
-                            print('~~~~~')
                             for li in lis:
                                 print(li.text)
                                 if len(li.text.strip()) > 0:
                                     param_content.append(li.text)
 
-                    else:
-                        print(content.text)
-                        if len(content.text.strip()) > 0:
-                            param_content.append(content.text)
+                    elif cont.find('span'):
+                        print(cont.find('span').text)
+                        param_content.append(cont.find('span').text)
 
-                # spans = content.find_all('span')
-                # print('~~~~~')
-                # for span in spans:
-                #     print(span.text)
-                #     if len(span.text.strip()) > 0:
-                #         param_content.append(span.text)
-
+                    # else:
+                    #     print(content.text)
+                    #     if len(content.text.strip()) > 0:
+                    #         param_content.append(content.text)
 
                 save_document_information(db, param_name, param_title, param_phone, param_office, param_email, param_schedule, param_category, param_content)
         return True
