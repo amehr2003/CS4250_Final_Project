@@ -139,40 +139,6 @@ def save_document_information(db, pg_name, pg_title, pg_phone, pg_office, pg_ema
         return False
 
 
-def get_faculty_page_from_db(db):
-    ## Collection
-    col = db.documents
-    docs = col.find({"name": "Bryant, Frank K."})
-    for data in docs:
-        print(data['_id'])
-        for row in data['content']:
-            print(row)
-
-        my_token = do_tokenizing(data['content'])
-        for term in my_token:
-            print(term)
-
-
-def do_tokenizing(input):
-    # create the transform
-    vectorizer = CountVectorizer(stop_words='english')
-    print(vectorizer.stop_words)
-
-    # tokenize and build vocab
-    vectorizer.fit(input)
-    print(vectorizer.vocabulary_)
-    #vocadict = vectorizer.vocabulary
-    #keys_list = list(vocadict.keys())
-    #print(keys_list)
-
-    # encode document
-    vector = vectorizer.transform(input)
-    print(vector.shape)
-    print(vector.toarray())
-
-    #return keys_list
-
-
 ### MongoDB Document Design
 '''
 document = {
@@ -197,7 +163,6 @@ db = connectDataBase()
 try:
     ## Get Html Content From DB
     get_faculty_info_from_db(db)
-    get_faculty_page_from_db(db)
     # print(html_page)
 except Exception as error:
     # program error
