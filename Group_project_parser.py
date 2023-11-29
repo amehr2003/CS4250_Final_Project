@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup as bs
 import pymongo
 import sys, traceback
 import datetime
+from sklearn.feature_extraction.text import CountVectorizer
+
 
 ## functions
 def connectDataBase():
@@ -21,6 +23,7 @@ def connectDataBase():
         traceback.print_exc()
         print("Database not connected successfully")
 
+
 def get_faculty_info_from_db(db):
     ## Collection
     col = db.pages
@@ -35,6 +38,7 @@ def get_faculty_info_from_db(db):
         fac_web = data['web']
         # print(fac_name, fac_title, fac_phone, fac_office, fac_email, fac_web, )
         scrap_faculty_individual_page(db, fac_name, fac_title, fac_phone, fac_office, fac_email, fac_web)
+
 
 def scrap_faculty_individual_page(db, param_name, param_title, param_phone, param_office, param_email, web):
     try:
@@ -102,15 +106,19 @@ def scrap_faculty_individual_page(db, param_name, param_title, param_phone, para
                         print(cont.find('span').text)
                         param_content.append(cont.find('span').text)
 
+                save_document_information(db, param_name, param_title, param_phone, param_office, param_email,
+                                          param_schedule, param_category, param_content)
+
                     # else:
                     #     print(content.text)
                     #     if len(content.text.strip()) > 0:
                     #         param_content.append(content.text)
-
-                save_document_information(db, param_name, param_title, param_phone, param_office, param_email, param_schedule, param_category, param_content)
+                    
         return True
 
-def save_document_information(db, pg_name, pg_title, pg_phone, pg_office, pg_email, pg_schedule, pg_category, pg_content):
+
+def save_document_information(db, pg_name, pg_title, pg_phone, pg_office, pg_email, pg_schedule, pg_category,
+                              pg_content):
     try:
         ## Collection
         col = db.documents
@@ -149,7 +157,6 @@ document = {
     "catetory": "['AboutMe' or 'SelectedPublication']",
 }
 '''
-
 
 ## Initial Infos.
 partial_url_starter = 'https://www.cpp.edu'
