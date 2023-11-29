@@ -1,3 +1,4 @@
+from sklearn.feature_extraction.text import TfidfVectorizer
 from urllib.request import urlopen
 from urllib.error import HTTPError
 from bs4 import BeautifulSoup as bs
@@ -51,6 +52,20 @@ def save_html_content_db(db, partial_url_starter, url_string, page_title):
     html_text = soup.find_all('html')
     print(url_string)
     ##print(html_text)
+
+    # Extract text content from the HTML for TF-IDF calculation
+    text_content = ' '.join([element.get_text() for element in html_text])
+
+    # Calculate TF-IDF weights using sklearn's TfidfVectorizer
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform([text_content])
+    feature_names = vectorizer.get_feature_names_out()
+
+    # Prepare TF-IDF data for storage
+    tfidf_data = {}
+    for col, term in enumerate(feature_names):
+        tfidf_data[term] = tfidf_matrix[0, col]
+
 
     doc = {
         "url": str(url_string),
