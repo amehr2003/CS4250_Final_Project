@@ -5,6 +5,8 @@ import pymongo
 import sys, traceback
 import datetime
 from sklearn.feature_extraction.text import CountVectorizer
+import nltk
+from nltk.stem import PorterStemmer
 
 ## functions
 def connectDataBase():
@@ -26,7 +28,7 @@ def connectDataBase():
 def get_faculty_page_from_db(db):
     ## Collection
     col = db.documents
-    docs = col.find({"name": "Bryant, Frank K."})
+    docs = col.find()
     for data in docs:
         print(data['_id'])
         term_text = ''
@@ -42,6 +44,7 @@ def get_faculty_page_from_db(db):
 
 def do_tokenizing(input):
     # create the transform
+    ps = PorterStemmer()
     vectorizer = CountVectorizer(stop_words='english')
 
     # tokenize and build vocab
@@ -50,6 +53,8 @@ def do_tokenizing(input):
 
     voca_dict = vectorizer.vocabulary_
     keys_list = list(voca_dict.keys())
+    for keys in keys_list:
+        print ("{0:20}{1:20}".format(keys, ps.stem(keys)))
     print(keys_list)
 
     # encode document
