@@ -1,4 +1,3 @@
-
 from urllib.request import urlopen
 from urllib.error import HTTPError
 from bs4 import BeautifulSoup as bs
@@ -8,6 +7,11 @@ import datetime
 from sklearn.feature_extraction.text import CountVectorizer
 import nltk
 from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+
+nltk.download('punkt')
+nltk.download('wordnet')
 
 ## functions
 def connectDataBase():
@@ -37,33 +41,23 @@ def get_faculty_page_from_db(db):
             print(row)
             term_text += row + '\n'
 
-        my_token = do_tokenizing(data['content'])
-        for term in my_token:
-            print(term)
-            save_term_index(db, term, term_text)
+        my_tokens = do_tokenizing(term_text)
+        for term, lemmatized_term in my_tokens:
+            print(f"{term} -> {lemmatized_term}")
+            save_term_index(db, lemmatized_term, term_text)
 
 
-def do_tokenizing(input):
+def do_tokenizing(input_text):
     # create the transform
     ps = PorterStemmer()
-    vectorizer = CountVectorizer(stop_words='english')
+    lemmatizer = WordNetLemmatizer()
 
-    # tokenize and build vocab
-    vectorizer.fit(input)
-    print(vectorizer.vocabulary_)
+    # tokenize and lemmatize
+    tokens = word_tokenize(input_text)
+    lemmatized_tokens = [(token, lemmatizer.lemmatize(token)) for token in tokens if token.isalnum()]
 
-    voca_dict = vectorizer.vocabulary_
-    keys_list = list(voca_dict.keys())
-    for keys in keys_list:
-        print ("{0:20}{1:20}".format(keys, ps.stem(keys)))
-    print(keys_list)
-
-    # encode document
-    vector = vectorizer.transform(input)
-    print(vector.shape)
-    print(vector.toarray())
-
-    return keys_list
+    print(lemmatized_tokens)
+    return lemmatized_tokens
 
 def save_term_index(db, term, term_text):
     try:
@@ -75,18 +69,14 @@ def save_term_index(db, term, term_text):
         doc = col.find_one(query)
 
         if doc:
-            print('Do Update')
             term_list = doc['text']
             term_list.append(term_text)
 
             # Update the document
             update = {"$set": {"text": term_list}}
             result = col.update_one(query, update)
-            print(result)
-            print(' has been Updated')
 
         else:
-            print('Do Insert')
             doc = {
                 "term": str(term).strip(),
                 "text": [term_text],
@@ -94,7 +84,6 @@ def save_term_index(db, term, term_text):
             }
             print(doc)
             result = col.insert_one(doc)
-            print(result.inserted_id, ' has been Stored')
 
         return True
     except Exception as error:
