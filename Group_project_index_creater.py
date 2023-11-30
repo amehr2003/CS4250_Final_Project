@@ -8,6 +8,7 @@ import datetime
 from sklearn.feature_extraction.text import CountVectorizer
 import nltk
 from nltk.stem import PorterStemmer
+from nltk.stem import WordNetLemmatizer
 
 ## functions
 def connectDataBase():
@@ -52,11 +53,19 @@ def do_tokenizing(input):
     vectorizer.fit(input)
     print(vectorizer.vocabulary_)
 
+    #Stemming trial
     voca_dict = vectorizer.vocabulary_
     keys_list = list(voca_dict.keys())
     for keys in keys_list:
         print ("{0:20}{1:20}".format(keys, ps.stem(keys)))
     print(keys_list)
+    
+    wnl = WordNetLemmatizer()
+    print("-------------------------------")
+    #Lemmatizing trial
+    print("{0:20}{1:20}".format("--Word--", "--Lemma--"))
+    for word in keys_list:
+        print("{0:20}{1:20}".format(word, wnl.lemmatize(word, pos="v")))
 
     # encode document
     vector = vectorizer.transform(input)
