@@ -68,6 +68,8 @@ def scrap_faculty_individual_page(db, param_name, param_title, param_phone, para
                     print(h2.text)
                     if h2.text.find('About') >= 0:
                         param_category = 'About'
+                    elif h2.text.find('Bio') >= 0:
+                        param_category = 'About'
                     elif h2.text.find('Publications') >= 0:
                         param_category = 'Publication'
                     elif h2.text.find('Honors') >= 0:
@@ -82,7 +84,6 @@ def scrap_faculty_individual_page(db, param_name, param_title, param_phone, para
                 for cont in contents:
                     # print(cont)
                     if cont.find('ol'):
-                        print('~~~~~~~~~~~~~~~~~~~~')
                         for ol in content.find_all('ol'):
                             print(ol.find('li').text)
                             param_content.append(ol.find('li').text)
@@ -146,8 +147,8 @@ def save_document_information(db, pg_name, pg_title, pg_phone, pg_office, pg_ema
 ### MongoDB Document Design
 '''
 document = {
-    "_id": {},
-    "doc_no": "[Integer Digit]",
+    ##"_id": {},
+    ##"doc_no": "[Integer Digit]",
     "author": "[String Professor's Name]",
     "title": "[String Professor's Title]",
     "email": "[String Professor's Email]",
@@ -155,6 +156,7 @@ document = {
     "phone": "[String Professor's Telephone Number]",
     "lecture": "[String Days of Lecture and Time]",
     "catetory": "['AboutMe' or 'SelectedPublication']",
+    "doc_text": "['Content of Text']",
 }
 '''
 
