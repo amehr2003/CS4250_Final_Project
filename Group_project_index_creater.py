@@ -101,7 +101,8 @@ def save_term_index(db, term, term_count, term_postion, doc_id):
                     }
                 },
                 {
-                    '$project': {'doc.count': 1, '_id': 0}}
+                    '$project': {'countFromNestedArray': '$doc.count'}
+                }
         ]
         doc = col.aggregate(pipeline)
         print(doc)
