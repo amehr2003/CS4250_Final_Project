@@ -13,6 +13,7 @@ from nltk.stem import WordNetLemmatizer
 nltk.download('punkt')
 nltk.download('wordnet')
 
+
 ## functions
 def connectDataBase():
     # Create a database connection object using pymongo
@@ -29,6 +30,17 @@ def connectDataBase():
         traceback.print_exc()
         print("Database not connected successfully")
 
+def do_tokenizing(input_text):
+    # create the transform
+    ps = PorterStemmer()
+    lemmatizer = WordNetLemmatizer()
+
+    # tokenize and lemmatize
+    tokens = word_tokenize(input_text)
+    lemmatized_tokens = [(token, lemmatizer.lemmatize(token)) for token in tokens if token.isalnum()]
+
+    print(lemmatized_tokens)
+    return lemmatized_tokens
 
 def get_faculty_page_from_db(db):
     ## Collection
@@ -44,22 +56,10 @@ def get_faculty_page_from_db(db):
         my_tokens = do_tokenizing(term_text)
         for term, lemmatized_term in my_tokens:
             print(f"{term} -> {lemmatized_term}")
-            save_term_index(db, lemmatized_term, term_text)
+            save_term_index(db, lemmatized_term, term_text, data['_id'])
 
 
-def do_tokenizing(input_text):
-    # create the transform
-    ps = PorterStemmer()
-    lemmatizer = WordNetLemmatizer()
-
-    # tokenize and lemmatize
-    tokens = word_tokenize(input_text)
-    lemmatized_tokens = [(token, lemmatizer.lemmatize(token)) for token in tokens if token.isalnum()]
-
-    print(lemmatized_tokens)
-    return lemmatized_tokens
-
-def save_term_index(db, term, term_text):
+def save_term_index(db, term, term_text, document_id):
     try:
         ## Collection
         col = db.indexes
@@ -70,7 +70,7 @@ def save_term_index(db, term, term_text):
 
         if doc:
             term_list = doc['text']
-            term_list.append(term_text)
+            term_list.append({"text": term_text, "document_id": document_id})
 
             # Update the document
             update = {"$set": {"text": term_list}}
@@ -79,7 +79,7 @@ def save_term_index(db, term, term_text):
         else:
             doc = {
                 "term": str(term).strip(),
-                "text": [term_text],
+                "text": [{"text": term_text, "document_id": document_id}],
                 "weight": 0
             }
             print(doc)
@@ -90,6 +90,7 @@ def save_term_index(db, term, term_text):
         traceback.print_exc()
         print("Mongo DB Error")
         return False
+
 
 ## Initial Infos.
 partial_url_starter = 'https://www.cpp.edu'
