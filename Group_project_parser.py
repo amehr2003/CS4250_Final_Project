@@ -4,8 +4,6 @@ from bs4 import BeautifulSoup as bs
 import pymongo
 import sys, traceback
 import datetime
-from sklearn.feature_extraction.text import CountVectorizer
-
 
 ## functions
 def connectDataBase():
@@ -23,11 +21,10 @@ def connectDataBase():
         traceback.print_exc()
         print("Database not connected successfully")
 
-
 def get_faculty_info_from_db(db):
     ## Collection
     col = db.pages
-    ## docs = col.find({"name": "Liu, Xin"})
+    # docs = col.find({"name": "Hossain, Tarique M."})
     docs = col.find()
     for data in docs:
         fac_name = data['name']
@@ -38,7 +35,6 @@ def get_faculty_info_from_db(db):
         fac_web = data['web']
         # print(fac_name, fac_title, fac_phone, fac_office, fac_email, fac_web, )
         scrap_faculty_individual_page(db, fac_name, fac_title, fac_phone, fac_office, fac_email, fac_web)
-
 
 def scrap_faculty_individual_page(db, param_name, param_title, param_phone, param_office, param_email, web):
     try:
@@ -62,11 +58,12 @@ def scrap_faculty_individual_page(db, param_name, param_title, param_phone, para
         for search in search_area:
             content_area = search.find_all('div', {"class": "blurb"})
             for content in content_area:
-                print('==========')
                 h2 = content.find('h2')
                 if h2:
                     print(h2.text)
                     if h2.text.find('About') >= 0:
+                        param_category = 'About'
+                    elif h2.text.find('Bio') >= 0:
                         param_category = 'About'
                     elif h2.text.find('Publications') >= 0:
                         param_category = 'Publication'
@@ -82,7 +79,6 @@ def scrap_faculty_individual_page(db, param_name, param_title, param_phone, para
                 for cont in contents:
                     # print(cont)
                     if cont.find('ol'):
-                        print('~~~~~~~~~~~~~~~~~~~~')
                         for ol in content.find_all('ol'):
                             print(ol.find('li').text)
                             param_content.append(ol.find('li').text)
@@ -106,6 +102,7 @@ def scrap_faculty_individual_page(db, param_name, param_title, param_phone, para
                         print(cont.find('span').text)
                         param_content.append(cont.find('span').text)
 
+
                 save_document_information(db, param_name, param_title, param_phone, param_office, param_email,
                                           param_schedule, param_category, param_content, web)
 
@@ -117,8 +114,11 @@ def scrap_faculty_individual_page(db, param_name, param_title, param_phone, para
         return True
 
 
+                save_document_information(db, param_name, param_title, param_phone, param_office, param_email, param_schedule, param_category, param_content)
+
 def save_document_information(db, pg_name, pg_title, pg_phone, pg_office, pg_email, pg_schedule, pg_category,
                               pg_content, web):
+
     try:
         ## Collection
         col = db.documents
@@ -147,8 +147,8 @@ def save_document_information(db, pg_name, pg_title, pg_phone, pg_office, pg_ema
 ### MongoDB Document Design
 '''
 document = {
-    "_id": {},
-    "doc_no": "[Integer Digit]",
+    ##"_id": {},
+    ##"doc_no": "[Integer Digit]",
     "author": "[String Professor's Name]",
     "title": "[String Professor's Title]",
     "email": "[String Professor's Email]",
@@ -156,8 +156,10 @@ document = {
     "phone": "[String Professor's Telephone Number]",
     "lecture": "[String Days of Lecture and Time]",
     "catetory": "['AboutMe' or 'SelectedPublication']",
+    "doc_text": "['Content of Text']",
 }
 '''
+
 
 ## Initial Infos.
 partial_url_starter = 'https://www.cpp.edu'
