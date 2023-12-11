@@ -39,16 +39,18 @@ def paginate_results(results, page_number, items_per_page=5):
     return results[start_index:end_index]
 
 
-# Cut the text field off after 50 characters
+# Cut the text field off after 160 characters
 def cut_string_short(string):
     string = str(string)
     i = 0
     returnString = ""
     while i < len(string):
+        if i == 75 or i == 150 or i == 225:
+            returnString += "\n"
         returnString += string[i]
         i += 1
-        if i > 60:
-            returnString += "..."
+        if i > 300:
+            returnString += "... \n"
             break
     return returnString
 
