@@ -1,23 +1,15 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
 import nltk
 import pymongo
 import traceback
-
-nltk.download('punkt')
-nltk.download('wordnet')
 
 
 def connectDataBase():
     try:
         client = pymongo.MongoClient(host="localhost", port=27017)
-        print("---Client---")
-        print(client)
+        print("database connected successfully...")
         db = client.cs4250prj
-        print("---DB---")
-        print(db)
         return db
     except Exception as error:
         traceback.print_exc()
@@ -47,6 +39,33 @@ def paginate_results(results, page_number, items_per_page=5):
     return results[start_index:end_index]
 
 
+# Cut the text field off after 50 characters
+def cut_string_short(string):
+    string = str(string)
+    i = 0
+    returnString = ""
+    while i < len(string):
+        returnString += string[i]
+        i += 1
+        if i > 60:
+            returnString += "..."
+            break
+    return returnString
+
+
+def clean_up_results(dic):
+    url = None
+    text_list = dic.get('text', [{'text': 'N/A'}])
+    for entry in text_list:
+        if 'url' in entry:
+            url = entry['url']
+            break
+    url = url or 'N/A'
+    text = "\n".join(entry.get('text', 'N/A') for entry in text_list)
+    print(f"URL: {url}\n"
+          f"Text: {cut_string_short(text)}")
+
+
 def main():
     db = connectDataBase()
 
@@ -66,9 +85,8 @@ def main():
     results = search_engine(user_query, tfidf_matrix, documents, vectorizer)
     paginated_results = paginate_results(results, page_number)
 
-    # Display results
     for result in paginated_results:
-        print(result)
+        clean_up_results(result)
 
 
 if __name__ == "__main__":

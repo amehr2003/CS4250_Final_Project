@@ -30,6 +30,7 @@ def connectDataBase():
         traceback.print_exc()
         print("Database not connected successfully")
 
+
 def do_tokenizing(input_text):
     # create the transform
     ps = PorterStemmer()
@@ -41,6 +42,7 @@ def do_tokenizing(input_text):
 
     print(lemmatized_tokens)
     return lemmatized_tokens
+
 
 def get_faculty_page_from_db(db):
     ## Collection
@@ -56,12 +58,12 @@ def get_faculty_page_from_db(db):
         my_tokens = do_tokenizing(term_text)
         for term, lemmatized_term in my_tokens:
             print(f"{term} -> {lemmatized_term}")
-            save_term_index(db, lemmatized_term, term_text, data['_id'])
+            save_term_index(db, lemmatized_term, term_text, data['_id'], data['url'])
 
 
-def save_term_index(db, term, term_text, document_id):
+def save_term_index(db, term, term_text, document_id, url):
     try:
-        ## Collection
+        # Collection
         col = db.indexes
 
         # Create a query to find the document to update
@@ -70,7 +72,7 @@ def save_term_index(db, term, term_text, document_id):
 
         if doc:
             term_list = doc['text']
-            term_list.append({"text": term_text, "document_id": document_id})
+            term_list.append({"text": term_text, "document_id": document_id, "url": url})
 
             # Update the document
             update = {"$set": {"text": term_list}}
@@ -79,7 +81,7 @@ def save_term_index(db, term, term_text, document_id):
         else:
             doc = {
                 "term": str(term).strip(),
-                "text": [{"text": term_text, "document_id": document_id}],
+                "text": [{"text": term_text, "document_id": document_id, "url": url}],
                 "weight": 0
             }
             print(doc)

@@ -107,18 +107,18 @@ def scrap_faculty_individual_page(db, param_name, param_title, param_phone, para
                         param_content.append(cont.find('span').text)
 
                 save_document_information(db, param_name, param_title, param_phone, param_office, param_email,
-                                          param_schedule, param_category, param_content)
+                                          param_schedule, param_category, param_content, web)
 
-                    # else:
-                    #     print(content.text)
-                    #     if len(content.text.strip()) > 0:
-                    #         param_content.append(content.text)
-                    
+                # else:
+                #     print(content.text)
+                #     if len(content.text.strip()) > 0:
+                #         param_content.append(content.text)
+
         return True
 
 
 def save_document_information(db, pg_name, pg_title, pg_phone, pg_office, pg_email, pg_schedule, pg_category,
-                              pg_content):
+                              pg_content, web):
     try:
         ## Collection
         col = db.documents
@@ -131,6 +131,7 @@ def save_document_information(db, pg_name, pg_title, pg_phone, pg_office, pg_ema
                 "email": pg_email,
                 "odd": pg_schedule,
                 "category": pg_category,
+                "url":  web,
                 "content": pg_content
             }
             result = col.insert_one(doc)
