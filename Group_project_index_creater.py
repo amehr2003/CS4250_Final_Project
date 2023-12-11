@@ -7,8 +7,12 @@ import datetime
 from sklearn.feature_extraction.text import CountVectorizer
 import nltk
 from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
-from collections import OrderedDict
+
+nltk.download('punkt')
+nltk.download('wordnet')
+
 
 ## functions
 def connectDataBase():
@@ -27,137 +31,67 @@ def connectDataBase():
         print("Database not connected successfully")
 
 
+def do_tokenizing(input_text):
+    # create the transform
+    ps = PorterStemmer()
+    lemmatizer = WordNetLemmatizer()
+
+    # tokenize and lemmatize
+    tokens = word_tokenize(input_text)
+    lemmatized_tokens = [(token, lemmatizer.lemmatize(token)) for token in tokens if token.isalnum()]
+
+    print(lemmatized_tokens)
+    return lemmatized_tokens
+
+
 def get_faculty_page_from_db(db):
     ## Collection
     col = db.documents
-    docs = col.find({"name": "Bryant, Frank K."})
+    docs = col.find()
     for data in docs:
+        print(data['_id'])
+        term_text = ''
         for row in data['content']:
-            do_tokenizing([row], data['_id'])
+            print(row)
+            term_text += row + '\n'
 
-def do_tokenizing(input, doc_id):
-    print("===== Document ID & TEXT =====")
-    print(doc_id)
-    print(input)
-    # create token
-    ps = PorterStemmer()
-    vectorizer = CountVectorizer(stop_words='english')
-
-    # tokenize and build voca
-    vectorizer.fit(input)
-    print("--- Do Stopping ---")
-    print(vectorizer.vocabulary_)
-
-    voca_dict = vectorizer.vocabulary_
-    term_positions = {key: i for i, key in enumerate(voca_dict)}
-    print("--- Term Postion Dict ---")
-    print(term_positions)
-    '''
-    for x in term_positions:
-        print(x)
-    '''
-
-    sorted_dict = OrderedDict(sorted(voca_dict.items(), key=lambda item: item[1], reverse=False))
-    print("--- Sorting Terms by Index ---")
-    print(sorted_dict)
-
-    # encode document
-    vector = vectorizer.transform(input)
-    print("--- Vector Shape ---")
-    print(vector.shape)
-
-    print("--- Vector: Term Counts ---")
-    # print(vector.toarray())
-    list = vector.toarray()
-    for count in list:
-        print(count)
-        term_counts = count
-
-    wnl = WordNetLemmatizer()
-    # Lemmatizing trial
-    print("--- Lemmatizing ---")
-    print("{0:20}{1:20}".format("--Word--", "--Lemma--"))
-    for i, word in enumerate(sorted_dict):
-        print("{0:20}{1:20}".format(word, wnl.lemmatize(word, pos="v")))
-        term = str(wnl.lemmatize(word, pos="v")).strip()
-        term_count = term_counts[i]
-        term_postion = get_position(word, term_positions)
-
-        ## Store Term into DB
-        save_term_index(db, term, term_count, term_postion, doc_id)
+        my_tokens = do_tokenizing(term_text)
+        for term, lemmatized_term in my_tokens:
+            print(f"{term} -> {lemmatized_term}")
+            save_term_index(db, lemmatized_term, term_text, data['_id'], data['url'])
 
 
-def save_term_index(db, term, term_count, term_postion, doc_id):
+def save_term_index(db, term, term_text, document_id, url):
     try:
-        ## Collection
+        # Collection
         col = db.indexes
 
         # Create a query to find the document to update
-        pipeline = [
-                {
-                    '$match': {
-                        'term': str(term),
-                        'doc.doc_id': 'ObjectId('+str(doc_id)+')'
-                    }
-                },
-                {
-                    '$project': {'countFromNestedArray': '$doc.count'}
-                }
-        ]
-        doc = col.aggregate(pipeline)
-        print(doc)
+        query = {"term": str(term).strip()}
+        doc = col.find_one(query)
 
         if doc:
-            print('Do Update')
-            # term_list = doc['text']
-            # term_list.append(term_text)
+            term_list = doc['text']
+            term_list.append({"text": term_text, "document_id": document_id, "url": url})
 
-            # update = {"$set": {"text": term_list}}
-            # result = col.update_one(query, update)
-            # print(result)
-            print(' has been Updated')
+            # Update the document
+            update = {"$set": {"text": term_list}}
+            result = col.update_one(query, update)
 
         else:
-            print('Do Insert')
             doc = {
                 "term": str(term).strip(),
-                "doc": [
-                        {
-                            "doc_id": doc_id,
-                            "position": int(term_postion),
-                            "count": int(term_count)
-                        }
-                ],
+                "text": [{"text": term_text, "document_id": document_id, "url": url}],
+                "weight": 0
             }
             print(doc)
             result = col.insert_one(doc)
-            print(result.inserted_id, ' has been Stored')
 
         return True
     except Exception as error:
         traceback.print_exc()
         print("Mongo DB Error")
         return False
-
-def get_position(term, term_position_dict):
-    position = 0
-    for index, value in enumerate(term_position_dict):
-        if str(value) == str(term):
-            position = index
-            break
-    return position
-
-
-### MongoDB Document Design
-'''
-index = {
-    "_id": {},
-    "term": "[lemmatized token from document]",
-    "doc_txt": "[docuement text]"
-    "title": "[String Professor's Title]",
-
-}
-'''
 
 
 ## Initial Infos.
@@ -177,4 +111,3 @@ except Exception as error:
 else:
     # program continue
     print("Continue")
-

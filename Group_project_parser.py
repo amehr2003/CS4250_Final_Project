@@ -102,31 +102,23 @@ def scrap_faculty_individual_page(db, param_name, param_title, param_phone, para
                         print(cont.find('span').text)
                         param_content.append(cont.find('span').text)
 
-                    # else:
-                    #     print(content.text)
-                    #     if len(content.text.strip()) > 0:
-                    #         param_content.append(content.text)
 
-                save_document_information(db, param_name, param_title, param_phone, param_office, param_email, param_schedule, param_category, param_content)
+                save_document_information(db, param_name, param_title, param_phone, param_office, param_email,
+                                          param_schedule, param_category, param_content, web)
 
-        side_area = my_soup.find_all('div', {"class": "accolades"})
-        for side in side_area:
-            h2 = side.find('h2').get_text()
-            print(h2)
-            param_category = h2.strip()
-
-            param_content2 = []
-            if side.find('p'):
-                for p in side.find_all('p'):
-                    print(p.text)
-                    if len(p.text.strip()) > 0:
-                        param_content2.append(p.text)
-            if len(param_content2) > 0:
-                save_document_information(db, param_name, param_title, param_phone, param_office, param_email, param_schedule, param_category, param_content2)
+                # else:
+                #     print(content.text)
+                #     if len(content.text.strip()) > 0:
+                #         param_content.append(content.text)
 
         return True
 
-def save_document_information(db, pg_name, pg_title, pg_phone, pg_office, pg_email, pg_schedule, pg_category, pg_content):
+
+                save_document_information(db, param_name, param_title, param_phone, param_office, param_email, param_schedule, param_category, param_content)
+
+def save_document_information(db, pg_name, pg_title, pg_phone, pg_office, pg_email, pg_schedule, pg_category,
+                              pg_content, web):
+
     try:
         ## Collection
         col = db.documents
@@ -139,6 +131,7 @@ def save_document_information(db, pg_name, pg_title, pg_phone, pg_office, pg_ema
                 "email": pg_email,
                 "odd": pg_schedule,
                 "category": pg_category,
+                "url":  web,
                 "content": pg_content
             }
             result = col.insert_one(doc)
